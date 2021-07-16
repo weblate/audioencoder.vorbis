@@ -17,6 +17,14 @@ msgstr ""
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
 "&& n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
 
+msgctxt "Addon Summary"
+msgid "Vorbis audio compression"
+msgstr ""
+
+msgctxt "Addon Description"
+msgid "Vorbis is a general purpose perceptual audio CODEC intended to allow maximum encoder flexibility, thus allowing it to scale competitively over an exceptionally wide range of bitrates."
+msgstr ""
+
 msgctxt "#30000"
 msgid "Preset"
 msgstr ""

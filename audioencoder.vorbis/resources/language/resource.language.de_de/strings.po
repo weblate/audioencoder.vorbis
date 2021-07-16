@@ -16,6 +16,14 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+msgctxt "Addon Summary"
+msgid "Vorbis audio compression"
+msgstr "Vorbis-Audiokomprimierung"
+
+msgctxt "Addon Description"
+msgid "Vorbis is a general purpose perceptual audio CODEC intended to allow maximum encoder flexibility, thus allowing it to scale competitively over an exceptionally wide range of bitrates."
+msgstr "Vorbis ist ein Allzweck-Audio-Codec, der hohe Encoderflexibilität bringen soll und somit eine wettbewerbsfähige Skalierung über einen außergewöhnlich großen Bereich von Bitraten ermöglicht."
+
 msgctxt "#30000"
 msgid "Preset"
 msgstr "Voreinstellung"
