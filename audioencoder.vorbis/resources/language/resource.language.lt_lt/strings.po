@@ -18,6 +18,14 @@ msgstr ""
 "19)) ? 0 : ((n % 10 >= 2 && n % 10 <= 9 && (n % 100 < 11 || n % 100 > 19)) ? "
 "1 : 2);\n"
 
+msgctxt "Addon Summary"
+msgid "Vorbis audio compression"
+msgstr ""
+
+msgctxt "Addon Description"
+msgid "Vorbis is a general purpose perceptual audio CODEC intended to allow maximum encoder flexibility, thus allowing it to scale competitively over an exceptionally wide range of bitrates."
+msgstr ""
+
 msgctxt "#30000"
 msgid "Preset"
 msgstr ""
