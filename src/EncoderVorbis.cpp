@@ -13,27 +13,16 @@
 #include <time.h>
 #include <vorbis/vorbisenc.h>
 
-static const int OGG_BLOCK_FRAMES = 1024; // number of frames to encode at a time
+static const size_t OGG_BLOCK_FRAMES = 1024; // number of frames to encode at a time
 
-class ATTRIBUTE_HIDDEN CEncoderVorbis : public kodi::addon::CInstanceAudioEncoder
+class ATTR_DLL_LOCAL CEncoderVorbis : public kodi::addon::CInstanceAudioEncoder
 {
 public:
   CEncoderVorbis(KODI_HANDLE instance, const std::string& version);
   ~CEncoderVorbis() override;
 
-  bool Start(int inChannels,
-             int inRate,
-             int inBits,
-             const std::string& title,
-             const std::string& artist,
-             const std::string& albumartist,
-             const std::string& album,
-             const std::string& year,
-             const std::string& track,
-             const std::string& genre,
-             const std::string& comment,
-             int trackLength) override;
-  int Encode(int numBytesRead, const uint8_t* stream) override;
+  bool Start(const kodi::addon::AudioEncoderInfoTag& tag) override;
+  ssize_t Encode(const uint8_t* stream, size_t numBytesRead) override;
   bool Finish() override;
 
 private:
@@ -78,42 +67,31 @@ CEncoderVorbis::~CEncoderVorbis()
   vorbis_info_clear(&m_vorbisInfo);
 }
 
-bool CEncoderVorbis::Start(int inChannels,
-                           int inRate,
-                           int inBits,
-                           const std::string& title,
-                           const std::string& artist,
-                           const std::string& albumartist,
-                           const std::string& album,
-                           const std::string& year,
-                           const std::string& track,
-                           const std::string& genre,
-                           const std::string& comment,
-                           int trackLength)
+bool CEncoderVorbis::Start(const kodi::addon::AudioEncoderInfoTag& tag)
 {
   // we accept only 2 ch 16 bit atm
-  if (inChannels != 2 || inBits != 16)
+  if (tag.GetChannels() != 2 || tag.GetBitsPerSample() != 16)
   {
     kodi::Log(ADDON_LOG_ERROR, "Invalid input format to encode");
     return false;
   }
 
   if (m_preset == -1)
-    vorbis_encode_init(&m_vorbisInfo, inChannels, inRate, -1, m_bitrate * 1000, -1);
+    vorbis_encode_init(&m_vorbisInfo, tag.GetChannels(), tag.GetSamplerate(), -1, m_bitrate * 1000, -1);
   else
-    vorbis_encode_init_vbr(&m_vorbisInfo, inChannels, inRate, float(m_preset) / 10.0f);
+    vorbis_encode_init_vbr(&m_vorbisInfo, tag.GetChannels(), tag.GetSamplerate(), float(m_preset) / 10.0f);
 
   /* add a comment */
   vorbis_comment comm;
   vorbis_comment_init(&comm);
-  vorbis_comment_add_tag(&comm, "comment", comment.c_str());
-  vorbis_comment_add_tag(&comm, "artist", artist.c_str());
-  vorbis_comment_add_tag(&comm, "title", title.c_str());
-  vorbis_comment_add_tag(&comm, "album", album.c_str());
-  vorbis_comment_add_tag(&comm, "albumartist", albumartist.c_str());
-  vorbis_comment_add_tag(&comm, "genre", genre.c_str());
-  vorbis_comment_add_tag(&comm, "tracknumber", track.c_str());
-  vorbis_comment_add_tag(&comm, "date", year.c_str());
+  vorbis_comment_add_tag(&comm, "comment", tag.GetComment().c_str());
+  vorbis_comment_add_tag(&comm, "artist", tag.GetArtist().c_str());
+  vorbis_comment_add_tag(&comm, "title", tag.GetTitle().c_str());
+  vorbis_comment_add_tag(&comm, "album", tag.GetAlbum().c_str());
+  vorbis_comment_add_tag(&comm, "albumartist", tag.GetAlbumArtist().c_str());
+  vorbis_comment_add_tag(&comm, "genre", tag.GetGenre().c_str());
+  vorbis_comment_add_tag(&comm, "tracknumber", std::to_string(tag.GetTrack()).c_str());
+  vorbis_comment_add_tag(&comm, "date", tag.GetReleaseDate().c_str());
 
   /* set up the analysis state and auxiliary encoding storage */
   vorbis_analysis_init(&m_vorbisDspState, &m_vorbisInfo);
@@ -155,11 +133,11 @@ bool CEncoderVorbis::Start(int inChannels,
   return true;
 }
 
-int CEncoderVorbis::Encode(int numBytesRead, const uint8_t* stream)
+ssize_t CEncoderVorbis::Encode(const uint8_t* stream, size_t numBytesRead)
 {
   int eos = 0;
 
-  int bytes_left = numBytesRead;
+  size_t bytes_left = numBytesRead;
   while (bytes_left)
   {
     const int channels = 2;
@@ -169,8 +147,8 @@ int CEncoderVorbis::Encode(int numBytesRead, const uint8_t* stream)
 
     /* uninterleave samples */
 
-    int bytes_per_frame = channels * (bits_per_channel >> 3);
-    int frames = std::min(bytes_left / bytes_per_frame, OGG_BLOCK_FRAMES);
+    size_t bytes_per_frame = channels * (bits_per_channel >> 3);
+    size_t frames = std::min(bytes_left / bytes_per_frame, OGG_BLOCK_FRAMES);
 
     const int16_t* buf = reinterpret_cast<const int16_t*>(stream);
     for (int i = 0; i < frames; i++)
@@ -261,7 +239,7 @@ bool CEncoderVorbis::Finish()
 
 //------------------------------------------------------------------------------
 
-class ATTRIBUTE_HIDDEN CMyAddon : public kodi::addon::CAddonBase
+class ATTR_DLL_LOCAL CMyAddon : public kodi::addon::CAddonBase
 {
 public:
   CMyAddon() = default;
