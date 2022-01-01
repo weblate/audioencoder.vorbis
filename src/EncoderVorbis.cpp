@@ -18,7 +18,7 @@ static const size_t OGG_BLOCK_FRAMES = 1024; // number of frames to encode at a 
 class ATTR_DLL_LOCAL CEncoderVorbis : public kodi::addon::CInstanceAudioEncoder
 {
 public:
-  CEncoderVorbis(KODI_HANDLE instance, const std::string& version);
+  CEncoderVorbis(const kodi::addon::IInstanceInfo& instance);
   ~CEncoderVorbis() override;
 
   bool Start(const kodi::addon::AudioEncoderInfoTag& tag) override;
@@ -38,13 +38,13 @@ private:
   int m_bitrate;
 };
 
-CEncoderVorbis::CEncoderVorbis(KODI_HANDLE instance, const std::string& version)
-  : CInstanceAudioEncoder(instance, version), m_inited(false), m_preset(-1)
+CEncoderVorbis::CEncoderVorbis(const kodi::addon::IInstanceInfo& instance)
+  : CInstanceAudioEncoder(instance), m_inited(false), m_preset(-1)
 {
   // create encoder context
   vorbis_info_init(&m_vorbisInfo);
 
-  int value = kodi::GetSettingInt("preset");
+  int value = kodi::addon::GetSettingInt("preset");
   if (value == 0)
     m_preset = 4;
   else if (value == 1)
@@ -52,7 +52,7 @@ CEncoderVorbis::CEncoderVorbis(KODI_HANDLE instance, const std::string& version)
   else if (value == 2)
     m_preset = 7;
 
-  m_bitrate = 128 + 32 * kodi::GetSettingInt("bitrate");
+  m_bitrate = 128 + 32 * kodi::addon::GetSettingInt("bitrate");
 }
 
 CEncoderVorbis::~CEncoderVorbis()
@@ -77,9 +77,11 @@ bool CEncoderVorbis::Start(const kodi::addon::AudioEncoderInfoTag& tag)
   }
 
   if (m_preset == -1)
-    vorbis_encode_init(&m_vorbisInfo, tag.GetChannels(), tag.GetSamplerate(), -1, m_bitrate * 1000, -1);
+    vorbis_encode_init(&m_vorbisInfo, tag.GetChannels(), tag.GetSamplerate(), -1, m_bitrate * 1000,
+                       -1);
   else
-    vorbis_encode_init_vbr(&m_vorbisInfo, tag.GetChannels(), tag.GetSamplerate(), float(m_preset) / 10.0f);
+    vorbis_encode_init_vbr(&m_vorbisInfo, tag.GetChannels(), tag.GetSamplerate(),
+                           float(m_preset) / 10.0f);
 
   /* add a comment */
   vorbis_comment comm;
@@ -243,20 +245,14 @@ class ATTR_DLL_LOCAL CMyAddon : public kodi::addon::CAddonBase
 {
 public:
   CMyAddon() = default;
-  ADDON_STATUS CreateInstance(int instanceType,
-                              const std::string& instanceID,
-                              KODI_HANDLE instance,
-                              const std::string& version,
-                              KODI_HANDLE& addonInstance) override;
+  ADDON_STATUS CreateInstance(const kodi::addon::IInstanceInfo& instance,
+                              KODI_ADDON_INSTANCE_HDL& hdl) override;
 };
 
-ADDON_STATUS CMyAddon::CreateInstance(int instanceType,
-                                      const std::string& instanceID,
-                                      KODI_HANDLE instance,
-                                      const std::string& version,
-                                      KODI_HANDLE& addonInstance)
+ADDON_STATUS CMyAddon::CreateInstance(const kodi::addon::IInstanceInfo& instance,
+                                      KODI_ADDON_INSTANCE_HDL& hdl)
 {
-  addonInstance = new CEncoderVorbis(instance, version);
+  hdl = new CEncoderVorbis(instance);
   return ADDON_STATUS_OK;
 }
 
